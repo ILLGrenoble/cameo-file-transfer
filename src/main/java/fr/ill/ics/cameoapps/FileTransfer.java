@@ -84,7 +84,7 @@ public class FileTransfer {
 					request.reply("");
 				}
 				catch (ParseException e) {
-					System.err.println("Error while parsing data");
+					System.err.println("Error while parsing data " + data);
 
 					request.reply("");
 				}
