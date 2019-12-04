@@ -56,10 +56,12 @@ public class FileTransfer {
 					JSONObject requestParameters = (JSONObject)parser.parse(data);
 			
 					String operation = (String)requestParameters.get("operation");
-					String type = (String)requestParameters.get("type");
 					path = (String)requestParameters.get("path");
 					
 					if (operation.equals(READ)) {
+						
+						String type = (String)requestParameters.get("type");
+						
 						if (type.equals(BINARY)) {
 							// Read and reply the content.
 							byte[] fileContent = Files.readAllBytes(FileSystems.getDefault().getPath(path));
