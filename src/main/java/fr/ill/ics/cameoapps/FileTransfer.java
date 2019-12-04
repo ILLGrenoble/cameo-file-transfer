@@ -16,6 +16,8 @@ public class FileTransfer {
 
 	final static String BINARY = "binary";
 	final static String TEXT = "text";
+	final static String READ = "read";
+	final static String DELETE = "delete";
 	
 	public static void main(String[] args) {
 
@@ -53,29 +55,39 @@ public class FileTransfer {
 				try {
 					JSONObject requestParameters = (JSONObject)parser.parse(data);
 			
+					String operation = (String)requestParameters.get("operation");
 					String type = (String)requestParameters.get("type");
 					path = (String)requestParameters.get("path");
 					
-					if (type.equals(BINARY)) {
-						
-						// Read and reply the content.
-						byte[] fileContent = Files.readAllBytes(FileSystems.getDefault().getPath(path));
-						request.reply(fileContent);
-					}
-					else if (type.equals(TEXT)) {
-						
-						String fileContent = "";
-						List<String> fileLines = Files.readAllLines(FileSystems.getDefault().getPath(path));
-
-						for (String line : fileLines) {
-							fileContent += line + '\n';
+					if (operation.equals(READ)) {
+						if (type.equals(BINARY)) {
+							// Read and reply the content.
+							byte[] fileContent = Files.readAllBytes(FileSystems.getDefault().getPath(path));
+							request.reply(fileContent);
 						}
-						
-						request.reply(fileContent);
+						else if (type.equals(TEXT)) {
+							
+							String fileContent = "";
+							List<String> fileLines = Files.readAllLines(FileSystems.getDefault().getPath(path));
+	
+							for (String line : fileLines) {
+								fileContent += line + '\n';
+							}
+							
+							request.reply(fileContent);
+						}
+						else {
+							// Reply error.
+							request.reply("");
+						}
 					}
-					else {
-						// Reply error.
-						request.reply("");
+					else if (operation.equals(DELETE)) {
+						if (Files.deleteIfExists(FileSystems.getDefault().getPath(path))) {
+							request.reply("ok");	
+						}
+						else {
+							request.reply("error");
+						}
 					}
 				}
 				catch (IOException e) {
