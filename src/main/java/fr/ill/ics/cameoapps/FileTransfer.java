@@ -1,31 +1,35 @@
 package fr.ill.ics.cameoapps;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-import fr.ill.ics.cameo.Application;
-import fr.ill.ics.cameo.RemoteException;
+import fr.ill.ics.cameo.base.This;
+import fr.ill.ics.cameo.coms.basic.Request;
+import fr.ill.ics.cameo.coms.basic.Responder;
 
 public class FileTransfer {
 
 	final static String BINARY = "binary";
 	final static String TEXT = "text";
 	final static String READ = "read";
+	final static String WRITE = "write";
 	final static String DELETE = "delete";
 	
 	public static void main(String[] args) {
 
 		System.out.println("File transfer");
 		
-		Application.This.init(args);
+		This.init(args);
 		
-		if (Application.This.isAvailable()) {
+		if (This.isAvailable()) {
 			System.out.println("connected");
 		}
 		
@@ -36,20 +40,21 @@ public class FileTransfer {
 			System.out.println("creating responder");
 			
 			// Create the responder.
-			Application.Responder responder = Application.Responder.create("file-transfer");
+			Responder responder = Responder.create("file-transfer");
+			responder.init();
 			
 			System.out.println("created responder " + responder);
 			
 			// Set the state.
-			Application.This.setRunning();
+			This.setRunning();
 
 			while (true) {
 			
 				// Receive the simple request.
-				Application.Request request = responder.receive();
+				Request request = responder.receive();
 	
 				// Get and parse the data.
-				String data = request.get();
+				String data = request.getString();
 				String path = "";
 				
 				try {
@@ -58,6 +63,7 @@ public class FileTransfer {
 					String operation = (String)requestParameters.get("operation");
 					path = (String)requestParameters.get("path");
 					
+					///////////////////////////////////////////////////////////
 					if (operation.equals(READ)) {
 						
 						String type = (String)requestParameters.get("type");
@@ -76,48 +82,72 @@ public class FileTransfer {
 								fileContent += line + '\n';
 							}
 							
-							request.reply(fileContent);
+							request.replyString(fileContent);
 						}
 						else {
 							// Reply error.
-							request.reply("");
+							request.replyString("");
 						}
 					}
+					///////////////////////////////////////////////////////////
+					else if (operation.equals(WRITE)) {
+						
+						String type = (String)requestParameters.get("type");
+						byte[] fileContent = request.getTwoParts()[1];
+						if (fileContent != null) {
+						
+							if (type.equals(BINARY)) {
+								
+								try {
+									Files.write(Paths.get(path), fileContent);
+									request.replyString("ok");	
+								}
+								catch (IOException e) {
+									request.replyString("error");
+									e.printStackTrace();
+								}
+							}
+							else if (type.equals(TEXT)) {
+								
+								String textFileContent = new String(fileContent, Charset.forName("UTF-8"));
+								
+								try {
+									Files.write(Paths.get(path), textFileContent.getBytes());
+									request.replyString("ok");	
+								}
+								catch (IOException e) {
+									request.replyString("error");
+									e.printStackTrace();
+								}
+							}
+						}
+					}
+					///////////////////////////////////////////////////////////
 					else if (operation.equals(DELETE)) {
+						
 						if (Files.deleteIfExists(FileSystems.getDefault().getPath(path))) {
-							request.reply("ok");	
+							request.replyString("ok");	
 						}
 						else {
-							request.reply("error");
+							request.replyString("error");
 						}
 					}
 				}
 				catch (IOException e) {
 					System.out.println("Cannot read file " + path);
 					
-					request.reply("");
+					request.replyString("");
 				}
 				catch (ParseException e) {
 					System.err.println("Error while parsing data " + data);
 
-					request.reply("");
-				}
-				finally {
-					// Terminate the request.
-					request.terminate();
+					request.replyString("");
 				}
 			}
-			
-		}
-		catch (RemoteException e) {
-			System.out.println("responder error");
 		}
 		finally {
 			// Do not forget to terminate This.
-			Application.This.terminate();			
+			This.terminate();			
 		}
-		
-		System.out.println("finished the application");
-
 	}
 }
