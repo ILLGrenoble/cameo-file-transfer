@@ -16,6 +16,7 @@ public class TestFileTransfer {
 	
 	final static String BINARY = "binary";
 	final static String TEXT = "text";
+	final static String DIRECTORY = "directory";
 	final static String READ = "read";
 	final static String WRITE = "write";
 	final static String DELETE = "delete";
@@ -76,6 +77,10 @@ public class TestFileTransfer {
 					}
 					
 					requester.sendTwoParts(requestDataObject.toJSONString().getBytes(), fileContent.getBytes());
+				}
+				else if (type.equals(DIRECTORY)) {
+					
+					requester.send(requestDataObject.toJSONString().getBytes());
 				}
 	        }
 	        else if (operation.equals(DELETE)) {

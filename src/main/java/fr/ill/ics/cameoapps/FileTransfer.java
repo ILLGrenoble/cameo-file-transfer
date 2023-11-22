@@ -19,6 +19,7 @@ public class FileTransfer {
 
 	final static String BINARY = "binary";
 	final static String TEXT = "text";
+	final static String DIRECTORY = "directory";
 	final static String READ = "read";
 	final static String WRITE = "write";
 	final static String DELETE = "delete";
@@ -119,6 +120,16 @@ public class FileTransfer {
 									request.replyString("error");
 									e.printStackTrace();
 								}
+							}
+						}
+						else if (type.equals(DIRECTORY)) {
+							try {
+								Files.createDirectory(Paths.get(path));
+								request.replyString("ok");
+							}
+							catch (IOException e) {
+								request.replyString("error");
+								e.printStackTrace();
 							}
 						}
 					}
