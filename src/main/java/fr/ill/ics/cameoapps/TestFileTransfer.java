@@ -33,9 +33,9 @@ public class TestFileTransfer {
     	String path = "";
     	String filePath = "";
 			
-		// Get the local Cameo server.
+		// Get the Cameo server.
 		Server server = This.getServer();
-		
+				
 		try {
 			// Connect to the server.
 			App transferServer = server.connect("filetransfer");

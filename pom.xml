@@ -43,17 +43,6 @@
             <groupId>fr.ill.ics</groupId>
             <artifactId>cameo-api</artifactId>
             <version>2.1.0</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>fr.ill.ics</groupId>
-                    <artifactId>cameo-com-jeromq</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>fr.ill.ics</groupId>
-            <artifactId>cameo-com-jzmq</artifactId>
-            <version>0.0.6</version>
         </dependency>
 	</dependencies>
 
