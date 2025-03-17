@@ -1,4 +1,4 @@
-package fr.ill.ics.cameoapps;
+package eu.ill.cameo.filetransfer;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -11,9 +11,9 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-import fr.ill.ics.cameo.base.This;
-import fr.ill.ics.cameo.coms.basic.Request;
-import fr.ill.ics.cameo.coms.basic.Responder;
+import eu.ill.cameo.api.base.This;
+import eu.ill.cameo.api.coms.basic.Request;
+import eu.ill.cameo.api.coms.basic.Responder;
 
 public class FileTransfer {
 

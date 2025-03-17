@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>fr.ill.ics.cameoapps</groupId>
 	<artifactId>cameo-file-transfer</artifactId>
-	<version>0.0.3</version>
+	<version>0.1.0</version>
 
 	<distributionManagement>
 		<repository>
@@ -40,10 +40,21 @@
 
 	<dependencies>
 		<dependency>
-            <groupId>fr.ill.ics</groupId>
-            <artifactId>cameo-api</artifactId>
-            <version>2.1.0</version>
-        </dependency>
+	    	<groupId>eu.ill.cameo</groupId>
+	    	<artifactId>cameo-api</artifactId>
+	    	<version>3.0.0</version>
+	    	<exclusions>
+	        	<exclusion>
+	            	<groupId>eu.ill.cameo</groupId>
+	            	<artifactId>cameo-com-jzmq</artifactId>
+	        	</exclusion>
+	    	</exclusions>
+		</dependency>
+		<dependency>
+		    <groupId>eu.ill.cameo</groupId>
+		    <artifactId>cameo-com-jeromq</artifactId>
+		    <version>1.0.0</version>
+		</dependency>
 	</dependencies>
 
 	<build>
@@ -80,7 +91,7 @@
 				<configuration>
 					<archive>
 						<manifest>
-							<mainClass>fr.ill.ics.cameoapps.FileTransfer</mainClass>
+							<mainClass>eu.ill.cameo.filetransfer.FileTransfer</mainClass>
 							<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
 							<addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
 						</manifest>

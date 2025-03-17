@@ -1,4 +1,4 @@
-package fr.ill.ics.cameoapps;
+package eu.ill.cameo.filetransfer;
 
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
@@ -6,13 +6,13 @@ import java.util.List;
 
 import org.json.simple.JSONObject;
 
-import fr.ill.ics.cameo.base.App;
-import fr.ill.ics.cameo.base.Server;
-import fr.ill.ics.cameo.base.State;
-import fr.ill.ics.cameo.base.This;
-import fr.ill.ics.cameo.coms.Requester;
+import eu.ill.cameo.api.base.App;
+import eu.ill.cameo.api.base.Server;
+import eu.ill.cameo.api.base.State;
+import eu.ill.cameo.api.base.This;
+import eu.ill.cameo.api.coms.Requester;
 
-public class TestFileTransfer {
+public class FileTransferClient {
 	
 	final static String BINARY = "binary";
 	final static String TEXT = "text";
@@ -20,10 +20,25 @@ public class TestFileTransfer {
 	final static String READ = "read";
 	final static String WRITE = "write";
 	final static String DELETE = "delete";
+	final static String HELP = "help";
+	final static String FILETRANSFER_SERVER_NAME = "filetransfer-server";
+
+	private static void help() {
+		
+		System.out.println("Usage:");
+		System.out.println("  help: prints this help");
+		System.out.println("  " + READ + " <" + BINARY + " | " + TEXT + "> <remote file path>: reads the remote file located at path");
+		System.out.println("  " + WRITE + " <" + BINARY + " | " + TEXT + "> <remote directory path> <local file path>: writes the local file located at path to the remote directory path");
+		System.out.println("  " + DELETE + " <remote file path>: deletes the remote file located at path");
+	}
 	
 	public static void main(String[] args) {
 
-		System.out.println("Test File transfer");
+		// Check help.
+		if (args.length <= 1 || args[0].equals(HELP)) {
+			help();
+			System.exit(1);
+		}
 		
 		This.init(args);
 		
@@ -38,8 +53,13 @@ public class TestFileTransfer {
 				
 		try {
 			// Connect to the server.
-			App transferServer = server.connect("filetransfer");
-			System.out.println("Application " + transferServer + " has state " + State.toString(transferServer.getActualState()));
+			App transferServer = server.connect(FILETRANSFER_SERVER_NAME);
+			if (transferServer == null) {
+				System.out.println("Cannot connect to the filetransfer app '" + FILETRANSFER_SERVER_NAME + "'");
+				System.exit(1);
+			}
+						
+			System.out.println("Application " + transferServer + " has state " + State.toString(transferServer.getState()));
 			
 			// Create a requester.
 			Requester requester = Requester.create(transferServer, "file-transfer");
@@ -143,6 +163,5 @@ public class TestFileTransfer {
 			// Do not forget to terminate This.
 			This.terminate();
 		}
-
 	}
 }
