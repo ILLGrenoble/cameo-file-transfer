@@ -193,8 +193,7 @@ public class FileTransferClient {
 			// Connect to the server.
 			App transferServer = server.connect(FILETRANSFER_SERVER_NAME);
 			if (transferServer == null) {
-				System.out.println("Cannot connect to the filetransfer app '" + FILETRANSFER_SERVER_NAME + "'.");
-				System.exit(1);
+				transferServer = server.start(FILETRANSFER_SERVER_NAME);
 			}
 						
 			//System.out.println("Application " + transferServer + " has state " + State.toString(transferServer.getState()));
