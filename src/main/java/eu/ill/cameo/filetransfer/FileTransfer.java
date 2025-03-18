@@ -24,6 +24,9 @@ public class FileTransfer {
 	final static String WRITE = "write";
 	final static String DELETE = "delete";
 	
+	final static String OK = "OK";
+	final static String ERROR = "Error";
+	
 	public static void main(String[] args) {
 
 		System.out.println("File transfer");
@@ -101,11 +104,11 @@ public class FileTransfer {
 								
 								try {
 									Files.write(Paths.get(path), fileContent);
-									request.replyString("ok");	
+									request.replyString(OK);	
 								}
 								catch (IOException e) {
-									request.replyString("error");
-									e.printStackTrace();
+									request.replyString(ERROR);
+									System.out.println("Cannot write file: " + e.getMessage());
 								}
 							}
 							else if (type.equals(TEXT)) {
@@ -114,22 +117,22 @@ public class FileTransfer {
 								
 								try {
 									Files.write(Paths.get(path), textFileContent.getBytes());
-									request.replyString("ok");	
+									request.replyString(OK);	
 								}
 								catch (IOException e) {
-									request.replyString("error");
-									e.printStackTrace();
+									request.replyString(ERROR);
+									System.out.println("Cannot write file: " + e.getMessage());
 								}
 							}
 						}
 						else if (type.equals(DIRECTORY)) {
 							try {
 								Files.createDirectory(Paths.get(path));
-								request.replyString("ok");
+								request.replyString(OK);
 							}
 							catch (IOException e) {
-								request.replyString("error");
-								e.printStackTrace();
+								request.replyString(ERROR);
+								System.out.println("Cannot write file: " + e.getMessage());
 							}
 						}
 					}
@@ -137,22 +140,22 @@ public class FileTransfer {
 					else if (operation.equals(DELETE)) {
 						
 						if (Files.deleteIfExists(FileSystems.getDefault().getPath(path))) {
-							request.replyString("ok");	
+							request.replyString(OK);	
 						}
 						else {
-							request.replyString("error");
+							request.replyString(ERROR);
 						}
 					}
 				}
 				catch (IOException e) {
 					System.out.println("Cannot read file " + path);
 					
-					request.replyString("");
+					request.replyString(ERROR);
 				}
 				catch (ParseException e) {
 					System.err.println("Error while parsing data " + data);
 
-					request.replyString("");
+					request.replyString(ERROR);
 				}
 			}
 		}

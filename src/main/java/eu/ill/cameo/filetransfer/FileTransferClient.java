@@ -1,7 +1,11 @@
 package eu.ill.cameo.filetransfer;
 
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 import org.json.simple.JSONObject;
@@ -23,13 +27,150 @@ public class FileTransferClient {
 	final static String HELP = "help";
 	final static String FILETRANSFER_SERVER_NAME = "filetransfer-server";
 
+	final static String OK = "OK";
+	final static String ERROR = "Error";
+	
 	private static void help() {
 		
 		System.out.println("Usage:");
 		System.out.println("  help: prints this help");
-		System.out.println("  " + READ + " <" + BINARY + " | " + TEXT + "> <remote file path>: reads the remote file located at path");
-		System.out.println("  " + WRITE + " <" + BINARY + " | " + TEXT + "> <remote directory path> <local file path>: writes the local file located at path to the remote directory path");
+		System.out.println("  " + READ + " <" + BINARY + " | " + TEXT + "> <remote file path> <local directory path>: reads the remote file located at path and copies in the local directory path");
+		System.out.println("  " + WRITE + " <" + BINARY + " | " + TEXT + "> <local file path> <remote directory path>: writes the local file located at path to the remote directory path");
 		System.out.println("  " + DELETE + " <remote file path>: deletes the remote file located at path");
+	}
+	
+	private static void write(String[] args, Requester requester) {
+		
+		if (args.length < 5) {
+			System.out.println("Bad number of arguments.");
+			help();
+			System.exit(1);
+		}
+		
+		// Send a two parts message.
+    	String type = args[1];
+    	String filePath = args[2];
+    	String path = args[3];
+    	
+		JSONObject requestDataObject = new JSONObject();
+		requestDataObject.put("operation", WRITE);
+        requestDataObject.put("type", type);
+        requestDataObject.put("path", path);
+        
+		try {
+			if (type.equals(BINARY)) {
+				// Read and reply the content.
+				byte[] fileContent = Files.readAllBytes(FileSystems.getDefault().getPath(filePath));
+				
+				requester.sendTwoParts(requestDataObject.toJSONString().getBytes(), fileContent);
+			}
+			else if (type.equals(TEXT)) {
+				
+				String fileContent = "";
+				List<String> fileLines = Files.readAllLines(FileSystems.getDefault().getPath(filePath));
+		
+				for (String line : fileLines) {
+					fileContent += line + '\n';
+				}
+				
+				requester.sendTwoParts(requestDataObject.toJSONString().getBytes(), fileContent.getBytes());
+			}
+			else if (type.equals(DIRECTORY)) {
+				requester.send(requestDataObject.toJSONString().getBytes());
+			}
+		
+		}
+    	catch (IOException e) {
+			System.out.println("Cannot read file: " + e.getMessage());
+		}
+    	
+    	// Receive the response.
+		String response = requester.receiveString();
+		
+		if (response.equals(OK)) {
+    		System.out.println("File written successfully.");	
+    	}
+    	else {
+    		System.out.println("File could not be written.");
+    		System.exit(1);
+    	}
+	}
+	
+	private static void delete(String[] args, Requester requester) {
+		
+		if (args.length < 3) {
+			System.out.println("Bad number of arguments.");
+			help();
+			System.exit(1);
+		}
+		
+		String path = args[1];
+    	
+    	JSONObject requestDataObject = new JSONObject();
+		requestDataObject.put("operation", DELETE);
+        requestDataObject.put("path", path);
+    	
+    	// Send a one part message.
+    	requester.sendString(requestDataObject.toJSONString());
+    	
+    	// Receive the response.
+    	String response = requester.receiveString();
+    	
+    	if (response.equals(OK)) {
+    		System.out.println("File deleted successfully.");	
+    	}
+    	else {
+    		System.out.println("File could not be deleted.");
+    		System.exit(1);
+    	}
+	}
+	
+	private static void writeLocalFile(String path, byte[] bytes) throws IOException {
+		
+		FileOutputStream outputStream;
+
+		outputStream = new FileOutputStream(path);
+		outputStream.write(bytes);
+		outputStream.close();
+	}
+	
+	private static void read(String[] args, Requester requester) throws IOException {
+		
+		if (args.length < 5) {
+			System.out.println("Bad number of arguments.");
+			help();
+			System.exit(1);
+		}
+		
+		String type = args[1];
+		String path = args[2];
+    	
+		JSONObject requestDataObject = new JSONObject();
+		requestDataObject.put("operation", READ);
+        requestDataObject.put("type", type);
+        requestDataObject.put("path", path);
+    	
+    	// Send a one part message.
+    	requester.sendString(requestDataObject.toJSONString());
+    	
+    	// Prepare to write.
+		Path filePath = Paths.get(path);
+		String fileName = filePath.getFileName().toString();
+		Path outputFilePath = Paths.get(args[3], fileName);
+    	
+    	// Receive the response.
+		if (type.equals(BINARY)) {
+			byte[] response = requester.receive();
+			System.out.println("File size " + response.length);
+			
+			writeLocalFile(outputFilePath.toString(), response);
+		}
+		else if (type.equals(TEXT)) {
+			String response = requester.receiveString();
+			System.out.println("File size " + response.getBytes().length);
+			
+			writeLocalFile(outputFilePath.toString(), response.getBytes());
+		}
 	}
 	
 	public static void main(String[] args) {
@@ -44,10 +185,7 @@ public class FileTransferClient {
 		
 		// The request message is the first argument.
 		String operation = args[0];
-		String type = "";
-    	String path = "";
-    	String filePath = "";
-			
+
 		// Get the Cameo server.
 		Server server = This.getServer();
 				
@@ -55,109 +193,38 @@ public class FileTransferClient {
 			// Connect to the server.
 			App transferServer = server.connect(FILETRANSFER_SERVER_NAME);
 			if (transferServer == null) {
-				System.out.println("Cannot connect to the filetransfer app '" + FILETRANSFER_SERVER_NAME + "'");
+				System.out.println("Cannot connect to the filetransfer app '" + FILETRANSFER_SERVER_NAME + "'.");
 				System.exit(1);
 			}
 						
-			System.out.println("Application " + transferServer + " has state " + State.toString(transferServer.getState()));
+			//System.out.println("Application " + transferServer + " has state " + State.toString(transferServer.getState()));
 			
 			// Create a requester.
 			Requester requester = Requester.create(transferServer, "file-transfer");
 			requester.setTimeout(2000);
 			requester.init();
 			
-			System.out.println("Created requester " + requester);
+			//System.out.println("Created requester " + requester);
 
-			///////////////////////////////////////////////////////////////////
+			// Check operation.
 	        if (operation.equals(WRITE)) {
-	        	
-	        	// Send a two parts message.
-	        	type = args[1];
-	        	path = args[2];
-	        	filePath = args[3];
-
-				JSONObject requestDataObject = new JSONObject();
-				requestDataObject.put("operation", operation);
-		        requestDataObject.put("type", type);
-		        requestDataObject.put("path", path);
-	        	
-	        	if (type.equals(BINARY)) {
-					// Read and reply the content.
-					byte[] fileContent = Files.readAllBytes(FileSystems.getDefault().getPath(filePath));
-					
-					requester.sendTwoParts(requestDataObject.toJSONString().getBytes(), fileContent);
-				}
-				else if (type.equals(TEXT)) {
-					
-					String fileContent = "";
-					List<String> fileLines = Files.readAllLines(FileSystems.getDefault().getPath(filePath));
-
-					for (String line : fileLines) {
-						fileContent += line + '\n';
-					}
-					
-					requester.sendTwoParts(requestDataObject.toJSONString().getBytes(), fileContent.getBytes());
-				}
-				else if (type.equals(DIRECTORY)) {
-					
-					requester.send(requestDataObject.toJSONString().getBytes());
-				}
+	        	write(args, requester);
 	        }
 	        else if (operation.equals(DELETE)) {
-	        	
-	        	path = args[1];
-	        	
-	        	JSONObject requestDataObject = new JSONObject();
-				requestDataObject.put("operation", operation);
-		        requestDataObject.put("path", path);
-	        	
-	        	// Send a one part message.
-	        	requester.sendString(requestDataObject.toJSONString());
+	        	delete(args, requester);
 	        }
-	        ///////////////////////////////////////////////////////////////////
 	        else if (operation.equals(READ)) {
-	        	
-	        	type = args[1];
-	        	path = args[2];
-	        	
-				JSONObject requestDataObject = new JSONObject();
-				requestDataObject.put("operation", operation);
-		        requestDataObject.put("type", type);
-		        requestDataObject.put("path", path);
-	        	
-	        	// Send a one part message.
-	        	requester.sendString(requestDataObject.toJSONString());
-	        }
-
-			if (operation.equals(READ)) {
-				// Receive the response.
-				if (type.equals(BINARY)) {
-					byte[] response = requester.receive();
-					System.out.println("File size " + response.length);
-				}
-				else if (type.equals(TEXT)) {
-					String response = requester.receiveString();
-					System.out.println("File content:\n" + response);
-				}
-			}
-			else if (operation.equals(WRITE)) {
-				// Receive the response.
-				String response = requester.receiveString();
-				System.out.println("Status " + response);
-			}
-			else if (operation.equals(DELETE)) {
-				String response = requester.receiveString();
-				System.out.println("Response: " + response);
+	        	read(args, requester);
 			}
 			else {
-				System.out.println("Unknown operation");
+				System.out.println("Unknown operation.");
 			}
 				
 			// Terminate the requester.
 			requester.terminate();
 		}
 		catch (Exception e) {
-			System.out.println("Requester error:" + e);
+			System.out.println("Error:" + e);
 		}
 		finally {
 			// Do not forget to terminate This.
