@@ -2,14 +2,14 @@
 
 Here is the list of operations:
 
-Operation | Type      | Path                                 | Content
-----------|-----------|--------------------------------------|--------------
-read      | binary    | the remote file path to read         | -
-read      | text      | the remote file path to read         | -
-write     | binary    | the remote file path to write to     | binary bytes array
-write     | text      | the remote file path to write to     | string
-write     | directory | the remote directory path to create  | -
-delete    | -         | the remote file path to delete       | -
+Operation | Type      | Path                                 | Content            | Replies
+----------|-----------|--------------------------------------|--------------------|---------
+read      | binary    | the remote file path to read         | -                  | status, content
+read      | text      | the remote file path to read         | -                  | status, content
+write     | binary    | the remote file path to write to     | binary bytes array | status
+write     | text      | the remote file path to write to     | string             | status
+write     | directory | the remote directory path to create  | -                  | status
+delete    | -         | the remote file path to delete       | -                  | status
 
 The operation, type and path must be written in a JSON string passed as first argument to the send request.
 The content is passed as the second argument of the send request.
@@ -21,6 +21,8 @@ Example of JSON string:
   "path": "/remote/file.txt"
 }
 ```
+There is a single reply in case of *write* and *delete* operations and two replies in case of *read*.
+The status response is "OK" or "Error" in case of error.
 
 # Client
 
