@@ -68,7 +68,6 @@ public class FileTransfer {
 			
 			// Create the directories.
 			Path parentPath = filePath.getParent();
-			
 			if (parentPath != null) {
 				try {
 					Files.createDirectories(parentPath);

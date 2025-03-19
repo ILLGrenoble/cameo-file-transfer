@@ -188,6 +188,17 @@ public class FileTransferClient {
 			outputFilePath = outputPath;
 		}
     	
+		// Create the directories if necessary.
+		Path parentPath = outputFilePath.getParent();
+		if (parentPath != null) {
+			try {
+				Files.createDirectories(parentPath);
+			}
+			catch (IOException e) {
+				System.out.println("Cannot create directories: " + e.getMessage());
+			}
+		}
+		
     	// Receive the response.
 		if (type.equals(BINARY)) {
 			byte[] response = requester.receive();
