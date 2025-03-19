@@ -12,7 +12,6 @@ import org.json.simple.JSONObject;
 
 import eu.ill.cameo.api.base.App;
 import eu.ill.cameo.api.base.Server;
-import eu.ill.cameo.api.base.State;
 import eu.ill.cameo.api.base.This;
 import eu.ill.cameo.api.coms.Requester;
 
@@ -34,23 +33,38 @@ public class FileTransferClient {
 		
 		System.out.println("Usage:");
 		System.out.println("  help: prints this help");
-		System.out.println("  " + READ + " <" + BINARY + " | " + TEXT + "> <remote file path> <local directory path>: reads the remote file located at path and copies in the local directory path");
-		System.out.println("  " + WRITE + " <" + BINARY + " | " + TEXT + "> <local file path> <remote directory path>: writes the local file located at path to the remote directory path");
+		System.out.println("  " + READ + " <" + BINARY + " | " + TEXT + "> <remote file path> <local file path>: reads the remote file located at path and copies to the local file path which can be a directory");
+		System.out.println("  " + WRITE + " <" + BINARY + " | " + TEXT + "> <local file path> <remote file path>: writes the local file located at path to the remote file path");
+		System.out.println("  " + WRITE + " " + DIRECTORY + " <remote directory path>: creates the remote directory and its parents located at path");
 		System.out.println("  " + DELETE + " <remote file path>: deletes the remote file located at path");
 	}
 	
 	private static void write(String[] args, Requester requester) {
-		
-		if (args.length < 5) {
-			System.out.println("Bad number of arguments.");
-			help();
-			System.exit(1);
-		}
-		
-		// Send a two parts message.
+
     	String type = args[1];
-    	String filePath = args[2];
-    	String path = args[3];
+    	String filePath = "";
+    	String path = "";
+    	
+    	// Check number of arguments.
+		if (type.equals(BINARY) || type.equals(TEXT)) {
+			if (args.length < 5) {
+				System.out.println("Bad number of arguments.");
+				help();
+				System.exit(1);
+			}
+			
+			filePath = args[2];
+	    	path = args[3];
+		}
+		else if (type.equals(DIRECTORY)) {
+			if (args.length < 4) {
+				System.out.println("Bad number of arguments.");
+				help();
+				System.exit(1);
+			}
+			
+	    	path = args[2];
+		}
     	
 		JSONObject requestDataObject = new JSONObject();
 		requestDataObject.put("operation", WRITE);
@@ -59,6 +73,13 @@ public class FileTransferClient {
         
 		try {
 			if (type.equals(BINARY)) {
+				
+				if (args.length < 5) {
+					System.out.println("Bad number of arguments.");
+					help();
+					System.exit(1);
+				}
+				
 				// Read and reply the content.
 				byte[] fileContent = Files.readAllBytes(FileSystems.getDefault().getPath(filePath));
 				
@@ -156,7 +177,16 @@ public class FileTransferClient {
     	// Prepare to write.
 		Path filePath = Paths.get(path);
 		String fileName = filePath.getFileName().toString();
-		Path outputFilePath = Paths.get(args[3], fileName);
+
+		// Check if output path is a directory or not.
+		Path outputPath = Paths.get(args[3]);
+		Path outputFilePath;
+		if (Files.isDirectory(outputPath)) {
+			outputFilePath = Paths.get(args[3], fileName);	
+		}
+		else {
+			outputFilePath = outputPath;
+		}
     	
     	// Receive the response.
 		if (type.equals(BINARY)) {
