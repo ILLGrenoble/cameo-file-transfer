@@ -201,16 +201,30 @@ public class FileTransferClient {
 		
     	// Receive the response.
 		if (type.equals(BINARY)) {
-			byte[] response = requester.receive();
-			System.out.println("File size " + response.length);
+			String response = requester.receiveString();
 			
-			writeLocalFile(outputFilePath.toString(), response);
+			if (response.equals(OK)) {
+				byte[] content = requester.receive();
+				System.out.println("File size " + content.length);
+				
+				writeLocalFile(outputFilePath.toString(), content);
+			}
+			else {
+				System.out.println("Read error.");
+			}
 		}
 		else if (type.equals(TEXT)) {
 			String response = requester.receiveString();
-			System.out.println("File size " + response.getBytes().length);
 			
-			writeLocalFile(outputFilePath.toString(), response.getBytes());
+			if (response.equals(OK)) {
+				String content = requester.receiveString();
+				System.out.println("File size " + content.getBytes().length);
+				
+				writeLocalFile(outputFilePath.toString(), content.getBytes());
+			}
+			else {
+				System.out.println("Read error.");
+			}
 		}
 	}
 	

@@ -34,6 +34,9 @@ public class FileTransfer {
 			if (type.equals(BINARY)) {
 				// Read and reply the content.
 				byte[] fileContent = Files.readAllBytes(FileSystems.getDefault().getPath(path));
+				
+				// Two-parts in reply. First status then content.
+				request.replyString(OK);
 				request.reply(fileContent);
 			}
 			else if (type.equals(TEXT)) {
@@ -45,16 +48,18 @@ public class FileTransfer {
 					fileContent += line + '\n';
 				}
 				
+				// Two-parts in reply. First status then content.
+				request.replyString(OK);
 				request.replyString(fileContent);
 			}
 			else {
 				// Reply error.
-				request.replyString("");
+				request.replyString(ERROR);
 			}
 		}
 		catch (IOException e) {
 			// Reply error.
-			request.replyString("");
+			request.replyString(ERROR);
 		}
 	}
 	
