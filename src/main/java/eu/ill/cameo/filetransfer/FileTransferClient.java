@@ -24,7 +24,7 @@ public class FileTransferClient {
 	final static String WRITE = "write";
 	final static String DELETE = "delete";
 	final static String HELP = "help";
-	final static String FILETRANSFER_SERVER_NAME = "filetransfer-server";
+	final static String FILETRANSFER_SERVER_NAME = "file-transfer-server";
 
 	final static String OK = "OK";
 	final static String ERROR = "Error";
