@@ -238,6 +238,9 @@ public class FileTransferClient {
 		
 		This.init(args);
 		
+		// To avoid heartbeat, so that we can use the atomic send/receive.
+		This.heartbeat(1000);
+		
 		// The request message is the first argument.
 		String operation = args[0];
 

@@ -24,25 +24,29 @@ Example of JSON string:
 There is a single reply in case of *write* and *delete* operations and two replies in case of *read*.
 The status response is "OK" or "Error" in case of error.
 
+# Server
+
+You can start the test server:
+
+```
+cameo-server config.xml --log-console
+```
+
+And start the transfer server:
+
+```
+cmo -p 13000 exec file-transfer-server
+```
+
 # Client
 
-The client can be used to read and write files with *cmo*.
-Configure your cameo *config.xml* file by adding the *filetransfer-server* and *filetransfer-client* apps:
-```
-<application name="file-transfer-server" starting_time="inf" retries="0" stopping_time="20" multiple="no" restart="no" info_arg="yes" log_directory="default">
-	<start executable="java" args="-jar /path/to/cameo-file-transfer-0.1.0-full.jar"/>
-</application>
 
-<application name="file-transfer-client" starting_time="inf" retries="0" stopping_time="20" multiple="no" restart="no" info_arg="yes" log_directory="default">
-	<start executable="java" args="-classpath /path/to/cameo-file-transfer-0.1.0-full.jar eu.ill.cameo.filetransfer.FileTransferClient"/>
-</application>
-```
+Test the client using the test server:
 
-Use the client:
 ```
-$ cmo exec file-transfer-client help
-$ cmo exec file-transfer-client write text /local/file.txt /remote/file.txt
-$ cmo exec file-transfer-client read text /remote/file.txt /local/file.txt
-$ cmo exec file-transfer-client delete /remote/file.txt
-$ cmo exec file-transfer-client write directory /remote/dir
+$ cmo -p 13000 exec file-transfer-client help
+$ cmo -p 13000 exec file-transfer-client write text /local/file.txt /remote/file.txt
+$ cmo -p 13000 exec file-transfer-client read text /remote/file.txt /local/file.txt
+$ cmo -p 13000 exec file-transfer-client delete /remote/file.txt
+$ cmo -p 13000 exec file-transfer-client write directory /remote/dir
 ```
