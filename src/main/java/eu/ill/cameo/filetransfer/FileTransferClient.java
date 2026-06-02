@@ -233,13 +233,10 @@ public class FileTransferClient {
 		// Check help.
 		if (args.length <= 1 || args[0].equals(HELP)) {
 			help();
-			System.exit(1);
+			System.exit(0);
 		}
 		
 		This.init(args);
-		
-		// To avoid heartbeat, so that we can use the atomic send/receive.
-		This.heartbeat(1000);
 		
 		// The request message is the first argument.
 		String operation = args[0];
@@ -253,16 +250,15 @@ public class FileTransferClient {
 			if (transferServer == null) {
 				transferServer = server.start(FILETRANSFER_SERVER_NAME);
 			}
-						
-			//System.out.println("Application " + transferServer + " has state " + State.toString(transferServer.getState()));
 			
 			// Create a requester.
 			Requester requester = Requester.create(transferServer, "file-transfer");
 			requester.setTimeout(2000);
 			requester.init();
-			
-			//System.out.println("Created requester " + requester);
 
+			// Start the request as there are multiple receive().
+			requester.startRequest();
+			
 			// Check operation.
 	        if (operation.equals(WRITE)) {
 	        	write(args, requester);
@@ -276,7 +272,10 @@ public class FileTransferClient {
 			else {
 				System.out.println("Unknown operation.");
 			}
-				
+
+	        // End the request.
+	        requester.endRequest();
+	        
 			// Terminate the requester.
 			requester.terminate();
 		}
