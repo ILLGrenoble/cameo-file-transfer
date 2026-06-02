@@ -5,11 +5,11 @@
 	<applications>
 		
 		<application name="file-transfer-server" starting_time="inf" retries="0" stopping_time="20" multiple="no" restart="no" info_arg="yes">
-			<start executable="java" args="-jar target/cameo-file-transfer-0.1.3-full.jar"/>
+			<start executable="java" args="-jar target/cameo-file-transfer-0.1.4-full.jar"/>
 		</application>
 
 		<application name="file-transfer-client" starting_time="inf" retries="0" stopping_time="20" multiple="no" restart="no" info_arg="yes">
-			<start executable="java" args="-classpath target/cameo-file-transfer-0.1.3-full.jar eu.ill.cameo.filetransfer.FileTransferClient"/>
+			<start executable="java" args="-classpath target/cameo-file-transfer-0.1.4-full.jar eu.ill.cameo.filetransfer.FileTransferClient"/>
 		</application>			
 		
 	</applications>
